@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sewa Bot Panel</title>
+    <!-- Script WAJIB dari Telegram untuk Mini Apps -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            margin: 0;
+        }
+        .container { max-width: 400px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, input {
+            width: 100%; padding: 10px; border-radius: 8px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            color: var(--tg-theme-text-color, #000);
+            font-size: 16px; box-sizing: border-box;
+        }
+        .extra-options { display: none; padding: 10px; border-left: 3px solid #0088cc; margin-top: 10px; }
+        .price-box {
+            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;
+        }
+        .total-price { font-size: 24px; font-weight: bold; color: #0088cc; }
+        p.hint { font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center;">🛒 Panel Sewa Bot</h2>
+
+    <div class="form-group">
+        <label for="tipe_bot">📦 Pilih Paket Bot:</label>
+        <select id="tipe_bot" onchange="calculatePrice()">
+            <option value="reguler">F-Sub Bot (Rp 30.000/Bulan)</option>
+            <option value="vip">VIP AutoOrder (Rp 50.000/Bulan)</option>
+            <option value="tagall">TagAll Bot (Rp 50.000/Bulan)</option>
+            <option value="music">Music Bot (Rp 50.000/Bulan)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="bulan">🗓️ Durasi (Bulan):</label>
+        <input type="number" id="bulan" value="1" min="1" max="12" onchange="calculatePrice()" onkeyup="calculatePrice()">
+    </div>
+
+    <!-- Opsi ini hanya muncul jika memilih bot Reguler (F-Sub) -->
+    <div id="extra_fsub" class="extra-options" style="display: block;">
+        <div class="form-group">
+            <label for="btn">🔘 Ekstra Button (Base: 3):</label>
+            <input type="number" id="btn" value="3" min="3" max="50" onchange="calculatePrice()" onkeyup="calculatePrice()">
+            <p class="hint">+ Rp 5.000 per tambahan 1 button</p>
+        </div>
+        <div class="form-group">
+            <label for="kntn">🖼️ Ekstra Konten (Base: 1):</label>
+            <input type="number" id="kntn" value="1" min="1" max="50" onchange="calculatePrice()" onkeyup="calculatePrice()">
+            <p class="hint">+ Rp 5.000 per tambahan 1 konten</p>
+        </div>
+    </div>
+
+    <div class="price-box">
+        <div>Total Harga:</div>
+        <div class="total-price" id="display_price">Rp 30.000</div>
+    </div>
+</div>
+
+<script>
+    // Inisialisasi Telegram Web App
+    let tg = window.Telegram.WebApp;
+    tg.expand(); // Memperbesar tampilan web app ke layar penuh
+
+    let totalAmount = 0;
+
+    function calculatePrice() {
+        let tipe = document.getElementById("tipe_bot").value;
+        let bulan = parseInt(document.getElementById("bulan").value) || 1;
+        let btn = parseInt(document.getElementById("btn").value) || 3;
+        let kntn = parseInt(document.getElementById("kntn").value) || 1;
+
+        let harga_dasar = (tipe === "reguler") ? 30000 : 50000;
+        let extra_fsub = document.getElementById("extra_fsub");
+
+        if (tipe === "reguler") {
+            extra_fsub.style.display = "block";
+            // Hitung harga tambahan seperti di payment.py
+            let add_btn_cost = Math.max(0, btn - 3) * 5000;
+            let add_kntn_cost = Math.max(0, kntn - 1) * 5000;
+            totalAmount = (harga_dasar * bulan) + add_btn_cost + add_kntn_cost;
+        } else {
+            extra_fsub.style.display = "none";
+            // VIP, Tagall, Music tidak ada tambahan button/konten
+            btn = 3; 
+            kntn = 1;
+            totalAmount = harga_dasar * bulan;
+        }
+
+        // Tampilkan harga dengan format Rupiah
+        document.getElementById("display_price").innerText = "Rp " + totalAmount.toLocaleString('id-ID');
+
+        // Menampilkan tombol utama (Main Button) bawaan Telegram
+        if (totalAmount > 0) {
+            tg.MainButton.setText("BAYAR SEKARANG - Rp " + totalAmount.toLocaleString('id-ID'));
+            tg.MainButton.show();
+        } else {
+            tg.MainButton.hide();
+        }
+    }
+
+    // Aksi ketika Main Button "BAYAR SEKARANG" ditekan
+    Telegram.WebApp.onEvent('mainButtonClicked', function() {
+        let data = {
+            amount: totalAmount,
+            month: parseInt(document.getElementById("bulan").value) || 1,
+            tipe_bot: document.getElementById("tipe_bot").value,
+            btn: parseInt(document.getElementById("btn").value) || 3,
+            kntn: parseInt(document.getElementById("kntn").value) || 1
+        };
+
+        // Kirim data JSON kembali ke bot Python
+        tg.sendData(JSON.stringify(data));
+        
+        // Tutup otomatis Mini App
+        tg.close();
+    });
+
+    // Hitung harga saat web pertama kali dibuka
+    calculatePrice();
+</script>
+
+</body>
+</html>
