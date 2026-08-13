@@ -36,6 +36,15 @@
       background: linear-gradient(135deg, var(--purple), #4c1d95);
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; cursor: pointer; border: 2px solid rgba(255,255,255,.15);
+      overflow: hidden; padding: 0; position: relative;
+    }
+    .avatar img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+      display: none;
+    }
+    .avatar span {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 100%;
     }
     .menu {
       position: absolute; right: 0; top: 52px; z-index: 20;
@@ -136,7 +145,10 @@
 <div class="wrap">
   <div class="topbar">
     <div class="brand">🤖 Modular Bot</div>
-    <div class="avatar" id="profileBtn">?</div>
+    <div class="avatar" id="profileBtn" title="Profil">
+      <img id="profilePhoto" alt="" />
+      <span id="profileInitial">?</span>
+    </div>
   </div>
 
   <div id="profileMenu" class="menu hidden">
@@ -279,11 +291,7 @@
   var pollTimer = null;
   var currentPaymentId = null;
   var selectedTipe = "reguler";
-
-  var user = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : {};
-  var displayName = user.username
-    ? ("@" + user.username)
-    : (user.first_name || "User");
+  var user = {};
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -297,15 +305,57 @@
     });
   }
 
-  document.getElementById("profileBtn").textContent =
-    (user.first_name || "U").charAt(0).toUpperCase();
-  document.getElementById("pName").textContent = displayName;
-  document.getElementById("pId").textContent = "ID: " + (user.id || "-");
+  function loadUser() {
+    var u = {};
+    try {
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        u = tg.initDataUnsafe.user;
+      }
+    } catch (e) {}
 
-  document.getElementById("helloText").innerHTML =
-    "👋🏻 Halo, <span style=\"color:#e9d5ff\">" + escapeHtml(displayName) +
-    "</span>! Selamat datang di <span style=\"color:#c4b5fd\">" +
-    escapeHtml(BOT_MASTER_NAME) + "</span>!";
+    if (!u.id && tg.initData) {
+      try {
+        var params = new URLSearchParams(tg.initData);
+        var raw = params.get("user");
+        if (raw) u = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    var displayName = u.username
+      ? ("@" + u.username)
+      : ((u.first_name || "") + (u.last_name ? " " + u.last_name : "")).trim() || "User";
+
+    document.getElementById("pName").textContent = displayName;
+    document.getElementById("pId").textContent = "ID: " + (u.id || "-");
+    document.getElementById("profileInitial").textContent =
+      (u.first_name || u.username || "U").charAt(0).toUpperCase();
+
+    document.getElementById("helloText").innerHTML =
+      "👋🏻 Halo, <span style=\"color:#e9d5ff\">" + escapeHtml(displayName) +
+      "</span>! Selamat datang di <span style=\"color:#c4b5fd\">" +
+      escapeHtml(BOT_MASTER_NAME) + "</span>!";
+
+    var photo = document.getElementById("profilePhoto");
+    var initial = document.getElementById("profileInitial");
+    if (u.photo_url) {
+      photo.onload = function () {
+        photo.style.display = "block";
+        initial.style.display = "none";
+      };
+      photo.onerror = function () {
+        photo.style.display = "none";
+        initial.style.display = "flex";
+      };
+      photo.src = u.photo_url;
+    } else {
+      photo.style.display = "none";
+      initial.style.display = "flex";
+    }
+
+    return u;
+  }
+
+  user = loadUser();
 
   document.getElementById("profileBtn").onclick = function (e) {
     e.stopPropagation();
