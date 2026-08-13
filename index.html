@@ -1,140 +1,300 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sewa Bot Panel</title>
-    <!-- Script WAJIB dari Telegram untuk Mini Apps -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            padding: 20px;
-            margin: 0;
-        }
-        .container { max-width: 400px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select, input {
-            width: 100%; padding: 10px; border-radius: 8px;
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
-            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
-            color: var(--tg-theme-text-color, #000);
-            font-size: 16px; box-sizing: border-box;
-        }
-        .extra-options { display: none; padding: 10px; border-left: 3px solid #0088cc; margin-top: 10px; }
-        .price-box {
-            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
-            padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;
-        }
-        .total-price { font-size: 24px; font-weight: bold; color: #0088cc; }
-        p.hint { font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-top: 5px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sewa Bot Panel</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: var(--tg-theme-bg-color, #111);
+      color: var(--tg-theme-text-color, #fff);
+      margin: 0; padding: 16px;
+    }
+    .container { max-width: 420px; margin: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #0088cc; display: flex; align-items: center; justify-content: center;
+      font-weight: bold; cursor: pointer;
+    }
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+      border-radius: 12px; padding: 14px; margin-bottom: 12px;
+    }
+    label { display: block; font-size: 13px; margin-bottom: 6px; opacity: .85; }
+    select, input {
+      width: 100%; padding: 10px; border-radius: 8px; border: none;
+      background: #2c2c2e; color: inherit; font-size: 15px; box-sizing: border-box;
+    }
+    .price { text-align: center; font-size: 22px; font-weight: bold; color: #4ea1ff; margin: 12px 0; }
+    .hint { font-size: 12px; opacity: .6; }
+    .hidden { display: none !important; }
+    #qrBox { text-align: center; }
+    #qrBox img { max-width: 240px; width: 100%; border-radius: 8px; background: #fff; padding: 8px; }
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; margin-top: 8px; cursor: pointer;
+    }
+    .btn-primary { background: #0088cc; color: #fff; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .menu {
+      position: absolute; right: 16px; top: 60px; background: #2c2c2e;
+      border-radius: 10px; padding: 10px; min-width: 180px; z-index: 10;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .menu div { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .menu div:hover { background: #3a3a3c; }
+    .success { text-align: center; padding: 24px 12px; }
+  </style>
 </head>
 <body>
-
 <div class="container">
-    <h2 style="text-align: center;">🛒 Panel Sewa Bot</h2>
+  <div class="header">
+    <h2 style="margin:0">🛒 Panel Sewa Bot</h2>
+    <div class="avatar" id="profileBtn" title="Profil">?</div>
+  </div>
 
-    <div class="form-group">
-        <label for="tipe_bot">📦 Pilih Paket Bot:</label>
-        <select id="tipe_bot" onchange="calculatePrice()">
-            <option value="reguler">F-Sub Bot (Rp 30.000/Bulan)</option>
-            <option value="vip">VIP AutoOrder (Rp 50.000/Bulan)</option>
-            <option value="tagall">TagAll Bot (Rp 50.000/Bulan)</option>
-            <option value="music">Music Bot (Rp 50.000/Bulan)</option>
-        </select>
+  <div id="profileMenu" class="menu hidden">
+    <div id="pName">-</div>
+    <div id="pId" class="hint">ID: -</div>
+    <hr style="border-color:#444">
+    <div onclick="alert('Riwayat order akan ditampilkan di versi berikutnya')">📋 Riwayat Order</div>
+    <div onclick="alert('Status order aktif')">⏳ Status Order</div>
+    <div onclick="alert('Bot yang disewa + expired')">🤖 Bot Saya</div>
+  </div>
+
+  <!-- STEP 1: Pilih paket -->
+  <div id="stepSelect" class="card">
+    <label>📦 Pilih Paket Bot</label>
+    <select id="tipe_bot" onchange="onTipeChange()">
+      <option value="reguler">F-Sub Bot — Rp 30.000/bln</option>
+      <option value="vip">VIP AutoOrder — Rp 50.000/bln</option>
+      <option value="tagall">TagAll Bot — Rp 50.000/bln</option>
+    </select>
+
+    <div style="margin-top:12px">
+      <label>🗓️ Durasi (bulan)</label>
+      <input type="number" id="bulan" value="1" min="1" max="12" onchange="calc()" onkeyup="calc()" />
     </div>
 
-    <div class="form-group">
-        <label for="bulan">🗓️ Durasi (Bulan):</label>
-        <input type="number" id="bulan" value="1" min="1" max="12" onchange="calculatePrice()" onkeyup="calculatePrice()">
+    <div id="extra_fsub" style="margin-top:12px">
+      <label>🔘 Ekstra Button (base 3)</label>
+      <input type="number" id="btn" value="3" min="3" max="50" onchange="calc()" onkeyup="calc()" />
+      <p class="hint">+ Rp 5.000 / button</p>
+      <label>🖼️ Ekstra Konten (base 1)</label>
+      <input type="number" id="kntn" value="1" min="1" max="50" onchange="calc()" onkeyup="calc()" />
+      <p class="hint">+ Rp 5.000 / konten</p>
     </div>
 
-    <!-- Opsi ini hanya muncul jika memilih bot Reguler (F-Sub) -->
-    <div id="extra_fsub" class="extra-options" style="display: block;">
-        <div class="form-group">
-            <label for="btn">🔘 Ekstra Button (Base: 3):</label>
-            <input type="number" id="btn" value="3" min="3" max="50" onchange="calculatePrice()" onkeyup="calculatePrice()">
-            <p class="hint">+ Rp 5.000 per tambahan 1 button</p>
-        </div>
-        <div class="form-group">
-            <label for="kntn">🖼️ Ekstra Konten (Base: 1):</label>
-            <input type="number" id="kntn" value="1" min="1" max="50" onchange="calculatePrice()" onkeyup="calculatePrice()">
-            <p class="hint">+ Rp 5.000 per tambahan 1 konten</p>
-        </div>
-    </div>
+    <div class="price" id="display_price">Rp 30.000</div>
+    <div id="desc" class="hint" style="margin-bottom:8px"></div>
+    <button class="btn btn-primary" onclick="startPay()">BAYAR SEKARANG</button>
+  </div>
 
-    <div class="price-box">
-        <div>Total Harga:</div>
-        <div class="total-price" id="display_price">Rp 30.000</div>
+  <!-- STEP 2: QRIS -->
+  <div id="stepQr" class="card hidden">
+    <div id="qrBox">
+      <p>Scan QRIS untuk membayar</p>
+      <img id="qrImg" alt="QRIS" />
+      <p class="price" id="qrAmount">-</p>
+      <p class="hint" id="qrMeta">ID: -</p>
+      <p class="hint" id="qrStatus">Menunggu pembayaran...</p>
     </div>
+    <button class="btn btn-danger" onclick="cancelPay()">Batalkan</button>
+  </div>
+
+  <!-- STEP 3: Sukses -->
+  <div id="stepOk" class="card success hidden">
+    <div style="font-size:48px">✅</div>
+    <h3>Pembayaran Berhasil!</h3>
+    <p id="okDetail"></p>
+    <p class="hint">Silakan deploy bot Anda dari menu bot.</p>
+    <button class="btn btn-primary" onclick="tg.close()">Tutup</button>
+  </div>
 </div>
 
 <script>
-    // Inisialisasi Telegram Web App
-    let tg = window.Telegram.WebApp;
-    tg.expand(); // Memperbesar tampilan web app ke layar penuh
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.ready();
 
-    let totalAmount = 0;
+  // ====== CONFIG — GANTI SESUAI AKUNMU ======
+  const MAELYN_KEY = "sk_ms_9a8fdaf50236925a4ce8e0d97325cae8f00cf70ee6c1d3f9";
+  const SAWERIA_USER_ID = "317e3ff8-6dba-421f-85bc-34bc6cab7ab5";
+  const SAWERIA_EMAIL = "annacantik461@gmail.com";
+  // ==========================================
 
-    function calculatePrice() {
-        let tipe = document.getElementById("tipe_bot").value;
-        let bulan = parseInt(document.getElementById("bulan").value) || 1;
-        let btn = parseInt(document.getElementById("btn").value) || 3;
-        let kntn = parseInt(document.getElementById("kntn").value) || 1;
+  let totalAmount = 0;
+  let pollTimer = null;
+  let currentPaymentId = null;
 
-        let harga_dasar = (tipe === "reguler") ? 30000 : 50000;
-        let extra_fsub = document.getElementById("extra_fsub");
+  const user = tg.initDataUnsafe?.user || {};
+  document.getElementById("profileBtn").textContent =
+    (user.first_name || "U").charAt(0).toUpperCase();
+  document.getElementById("pName").textContent =
+    (user.username ? "@" + user.username : user.first_name) || "User";
+  document.getElementById("pId").textContent = "ID: " + (user.id || "-");
 
-        if (tipe === "reguler") {
-            extra_fsub.style.display = "block";
-            // Hitung harga tambahan seperti di payment.py
-            let add_btn_cost = Math.max(0, btn - 3) * 5000;
-            let add_kntn_cost = Math.max(0, kntn - 1) * 5000;
-            totalAmount = (harga_dasar * bulan) + add_btn_cost + add_kntn_cost;
-        } else {
-            extra_fsub.style.display = "none";
-            // VIP, Tagall, Music tidak ada tambahan button/konten
-            btn = 3; 
-            kntn = 1;
-            totalAmount = harga_dasar * bulan;
-        }
+  document.getElementById("profileBtn").onclick = () => {
+    document.getElementById("profileMenu").classList.toggle("hidden");
+  };
 
-        // Tampilkan harga dengan format Rupiah
-        document.getElementById("display_price").innerText = "Rp " + totalAmount.toLocaleString('id-ID');
+  const DESK = {
+    reguler: "Force Subscribe + auto post konten. Cocok naikkan member channel.",
+    vip: "Auto order VIP channel dengan QRIS unik per user.",
+    tagall: "Partner bisa tagall otomatis tanpa jadi admin."
+  };
 
-        // Menampilkan tombol utama (Main Button) bawaan Telegram
-        if (totalAmount > 0) {
-            tg.MainButton.setText("BAYAR SEKARANG - Rp " + totalAmount.toLocaleString('id-ID'));
-            tg.MainButton.show();
-        } else {
-            tg.MainButton.hide();
-        }
+  function onTipeChange() {
+    const t = document.getElementById("tipe_bot").value;
+    document.getElementById("extra_fsub").style.display = t === "reguler" ? "block" : "none";
+    document.getElementById("desc").textContent = DESK[t] || "";
+    calc();
+  }
+
+  function calc() {
+    const tipe = document.getElementById("tipe_bot").value;
+    const bulan = parseInt(document.getElementById("bulan").value) || 1;
+    let btn = parseInt(document.getElementById("btn").value) || 3;
+    let kntn = parseInt(document.getElementById("kntn").value) || 1;
+    const dasar = tipe === "reguler" ? 30000 : 50000;
+
+    if (tipe === "reguler") {
+      totalAmount = dasar * bulan + Math.max(0, btn - 3) * 5000 + Math.max(0, kntn - 1) * 5000;
+    } else {
+      totalAmount = dasar * bulan;
     }
+    document.getElementById("display_price").textContent =
+      "Rp " + totalAmount.toLocaleString("id-ID");
+  }
 
-    // Aksi ketika Main Button "BAYAR SEKARANG" ditekan
-    Telegram.WebApp.onEvent('mainButtonClicked', function() {
-        let data = {
-            amount: totalAmount,
-            month: parseInt(document.getElementById("bulan").value) || 1,
-            tipe_bot: document.getElementById("tipe_bot").value,
-            btn: parseInt(document.getElementById("btn").value) || 3,
-            kntn: parseInt(document.getElementById("kntn").value) || 1
-        };
+  function show(id) {
+    ["stepSelect", "stepQr", "stepOk"].forEach(s =>
+      document.getElementById(s).classList.add("hidden")
+    );
+    document.getElementById(id).classList.remove("hidden");
+  }
 
-        // Kirim data JSON kembali ke bot Python
-        tg.sendData(JSON.stringify(data));
-        
-        // Tutup otomatis Mini App
-        tg.close();
-    });
+  async function startPay() {
+    calc();
+    if (totalAmount <= 0) return tg.showAlert("Harga tidak valid");
 
-    // Hitung harga saat web pertama kali dibuka
-    calculatePrice();
+    const tipe = document.getElementById("tipe_bot").value;
+    const month = parseInt(document.getElementById("bulan").value) || 1;
+    const btn = parseInt(document.getElementById("btn").value) || 3;
+    const kntn = parseInt(document.getElementById("kntn").value) || 1;
+    const name = user.first_name || "User";
+
+    tg.MainButton.showProgress();
+    try {
+      const res = await fetch("https://api.maelyn.eu/api/payment/saweria/create/transaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-maelyn-auth": MAELYN_KEY
+        },
+        body: JSON.stringify({
+          user_id: String(SAWERIA_USER_ID),
+          amount: totalAmount,
+          name: name,
+          email: SAWERIA_EMAIL,
+          msg: `MiniApp ${tipe} \( {month}bln uid: \){user.id || 0}`
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || "Gagal buat transaksi");
+
+      const pay = json.payment || {};
+      const data = pay.data || pay;
+      currentPaymentId = data.id || pay.id;
+      const qr = data.qr_image || data.qr || "";
+      const expired = data.expired_at || "-";
+
+      if (!currentPaymentId) throw new Error("payment_id kosong");
+
+      // simpan meta untuk sendData nanti
+      window._orderMeta = { amount: totalAmount, month, tipe_bot: tipe, btn, kntn, payment_id: currentPaymentId };
+
+      if (qr) {
+        const src = qr.startsWith("data:") ? qr : ("data:image/png;base64," + qr.replace(/^data:image\/\w+;base64,/, ""));
+        document.getElementById("qrImg").src = src;
+      } else if (data.url || pay.payment_url) {
+        // fallback: tampilkan link jika QR tidak ada
+        document.getElementById("qrBox").innerHTML =
+          `<p>Buka link pembayaran:</p><a href="${data.url || pay.payment_url}" target="_blank">Bayar di sini</a>`;
+      }
+
+      document.getElementById("qrAmount").textContent = "Rp " + totalAmount.toLocaleString("id-ID");
+      document.getElementById("qrMeta").textContent = `ID: ${currentPaymentId} · Exp: ${expired}`;
+      show("stepQr");
+      startPoll();
+    } catch (e) {
+      tg.showAlert("Error: " + (e.message || e));
+    } finally {
+      tg.MainButton.hideProgress();
+    }
+  }
+
+  function startPoll() {
+    stopPoll();
+    pollTimer = setInterval(checkStatus, 8000);
+    checkStatus();
+  }
+  function stopPoll() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  async function checkStatus() {
+    if (!currentPaymentId) return;
+    try {
+      const url = `https://api.maelyn.eu/api/payment/saweria/check/transaction?user_id=\( {encodeURIComponent(SAWERIA_USER_ID)}&payment_id= \){encodeURIComponent(currentPaymentId)}`;
+      const res = await fetch(url, {
+        headers: { "x-maelyn-auth": MAELYN_KEY }
+      });
+      const json = await res.json();
+      const st = (json.payment && json.payment.status) || json.status || "";
+      document.getElementById("qrStatus").textContent = "Status: " + (st || "...");
+
+      if (String(st).toUpperCase() === "PAID") {
+        stopPoll();
+        onPaid();
+      }
+    } catch (e) {
+      document.getElementById("qrStatus").textContent = "Gagal cek status, mencoba lagi...";
+    }
+  }
+
+  function onPaid() {
+    const m = window._orderMeta || {};
+    document.getElementById("okDetail").textContent =
+      `Paket ${String(m.tipe_bot || "").toUpperCase()} · ${m.month} bulan · Rp ${(m.amount || 0).toLocaleString("id-ID")}`;
+    show("stepOk");
+
+    // Kirim ke bot agar set AKSES_DEPLOY
+    try {
+      tg.sendData(JSON.stringify({
+        event: "paid",
+        payment_id: m.payment_id,
+        amount: m.amount,
+        month: m.month,
+        tipe_bot: m.tipe_bot,
+        btn: m.btn,
+        kntn: m.kntn
+      }));
+    } catch (e) {}
+  }
+
+  function cancelPay() {
+    stopPoll();
+    currentPaymentId = null;
+    show("stepSelect");
+  }
+
+  onTipeChange();
+  calc();
 </script>
-
 </body>
 </html>
