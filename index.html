@@ -2,116 +2,240 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sewa Bot Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Modular Bot — Sewa</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: var(--tg-theme-bg-color, #111);
-      color: var(--tg-theme-text-color, #fff);
-      margin: 0; padding: 16px;
+    :root {
+      --bg: #0b0614;
+      --bg2: #160b24;
+      --card: rgba(40, 20, 70, 0.85);
+      --purple: #a855f7;
+      --purple2: #7c3aed;
+      --text: #f3e8ff;
+      --muted: #c4b5fd;
+      --line: rgba(168, 85, 247, 0.35);
     }
-    .container { max-width: 420px; margin: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse at top, #2e1065 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 14px;
+    }
+    .wrap { max-width: 440px; margin: 0 auto; position: relative; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .brand { font-weight: 700; font-size: 17px; letter-spacing: .2px; }
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
-      background: #0088cc; display: flex; align-items: center; justify-content: center;
-      font-weight: bold; cursor: pointer;
+      background: linear-gradient(135deg, var(--purple), #4c1d95);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; cursor: pointer; border: 2px solid rgba(255,255,255,.15);
     }
-    .card {
-      background: var(--tg-theme-secondary-bg-color, #1c1c1e);
-      border-radius: 12px; padding: 14px; margin-bottom: 12px;
-    }
-    label { display: block; font-size: 13px; margin-bottom: 6px; opacity: .85; }
-    select, input {
-      width: 100%; padding: 10px; border-radius: 8px; border: none;
-      background: #2c2c2e; color: inherit; font-size: 15px; box-sizing: border-box;
-    }
-    .price { text-align: center; font-size: 22px; font-weight: bold; color: #4ea1ff; margin: 12px 0; }
-    .hint { font-size: 12px; opacity: .6; }
-    .hidden { display: none !important; }
-    #qrBox { text-align: center; }
-    #qrBox img { max-width: 240px; width: 100%; border-radius: 8px; background: #fff; padding: 8px; }
-    .btn {
-      width: 100%; padding: 12px; border: none; border-radius: 10px;
-      font-size: 15px; font-weight: 600; margin-top: 8px; cursor: pointer;
-    }
-    .btn-primary { background: #0088cc; color: #fff; }
-    .btn-danger { background: #c0392b; color: #fff; }
     .menu {
-      position: absolute; right: 16px; top: 60px; background: #2c2c2e;
-      border-radius: 10px; padding: 10px; min-width: 180px; z-index: 10;
-      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      position: absolute; right: 0; top: 52px; z-index: 20;
+      background: #1a0b2e; border: 1px solid var(--line);
+      border-radius: 14px; padding: 12px; min-width: 210px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
     }
-    .menu div { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    .menu div:hover { background: #3a3a3c; }
-    .success { text-align: center; padding: 24px 12px; }
+    .menu .name { font-weight: 600; }
+    .menu .id { font-size: 12px; color: var(--muted); margin: 4px 0 10px; }
+    .menu .item {
+      padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px;
+    }
+    .menu .item:hover { background: rgba(168,85,247,.15); }
+    .hidden { display: none !important; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(8px);
+    }
+    .hero {
+      width: 100%; border-radius: 16px; display: block;
+      margin-bottom: 14px; object-fit: cover; max-height: 180px;
+      border: 1px solid var(--line);
+    }
+    .welcome h1 {
+      font-size: 18px; margin: 0 0 10px; line-height: 1.35;
+    }
+    .welcome p, .desc-box {
+      font-size: 13.5px; line-height: 1.55; color: var(--muted); margin: 0 0 8px;
+    }
+    .welcome strong { color: var(--text); }
+    .bot-grid { display: grid; gap: 10px; margin-top: 12px; }
+    .bot-btn {
+      width: 100%; text-align: left; padding: 14px 14px;
+      border-radius: 14px; border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(30,10,50,.9));
+      color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .bot-btn small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; font-size: 12px; }
+    .bot-btn:active { transform: scale(.98); }
+
+    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+    select, input {
+      width: 100%; padding: 11px 12px; border-radius: 12px;
+      border: 1px solid var(--line); background: #12081f; color: var(--text);
+      font-size: 15px;
+    }
+    .price {
+      text-align: center; font-size: 24px; font-weight: 800;
+      color: #e9d5ff; margin: 14px 0 6px;
+    }
+    .hint { font-size: 12px; color: var(--muted); }
+    .btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; margin-top: 10px; cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      color: #fff;
+    }
+    .btn-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--line);
+    }
+    .btn-danger { background: #7f1d1d; color: #fecaca; }
+    #qrBox { text-align: center; }
+    #qrBox img {
+      max-width: 230px; width: 100%; border-radius: 12px;
+      background: #fff; padding: 10px; margin: 8px 0;
+    }
+    .success { text-align: center; padding: 28px 12px; }
+    .empty {
+      text-align: center; padding: 18px 10px; color: var(--muted); font-size: 14px;
+    }
+    .back-row { margin-bottom: 8px; }
+    .chip {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      background: rgba(168,85,247,.2); color: #e9d5ff; font-size: 12px;
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h2 style="margin:0">🛒 Panel Sewa Bot</h2>
-    <div class="avatar" id="profileBtn" title="Profil">?</div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">🛒 Modular Bot</div>
+    <div class="avatar" id="profileBtn">?</div>
   </div>
 
   <div id="profileMenu" class="menu hidden">
-    <div id="pName">-</div>
-    <div id="pId" class="hint">ID: -</div>
-    <hr style="border-color:#444">
-    <div onclick="alert('Riwayat order akan ditampilkan di versi berikutnya')">📋 Riwayat Order</div>
-    <div onclick="alert('Status order aktif')">⏳ Status Order</div>
-    <div onclick="alert('Bot yang disewa + expired')">🤖 Bot Saya</div>
+    <div class="name" id="pName">-</div>
+    <div class="id" id="pId">ID: -</div>
+    <div class="item" onclick="openProfilePanel('history')">📋 Riwayat Order</div>
+    <div class="item" onclick="openProfilePanel('status')">⏳ Status Order</div>
+    <div class="item" onclick="openProfilePanel('bots')">🤖 Bot Saya</div>
   </div>
 
-  <!-- STEP 1: Pilih paket -->
-  <div id="stepSelect" class="card">
-    <label>📦 Pilih Paket Bot</label>
-    <select id="tipe_bot" onchange="onTipeChange()">
-      <option value="reguler">F-Sub Bot — Rp 30.000/bln</option>
-      <option value="vip">VIP AutoOrder — Rp 50.000/bln</option>
-      <option value="tagall">TagAll Bot — Rp 50.000/bln</option>
-    </select>
+  <!-- HOME -->
+  <div id="stepHome">
+    <div class="card welcome">
+      <img class="hero" src="https://files.catbox.moe/2bjdun.jpg" alt="Store" />
+      <h1 id="helloText">Halo!</h1>
+      <p>
+        <strong>🤖 Platform terpadu</strong> untuk memudahkan kamu mendeploy bot dan mengelola sosmed:
+      </p>
+      <p>🗃️ <strong>Bot Fsub</strong> — Wajib Join & Auto Post Konten.</p>
+      <p>🔞 <strong>Bot VIP Auto Order</strong> — QRIS Saweria otomatis.</p>
+      <p>📢 <strong>Bot TagAll</strong> — Mention massal partner & non-partner.</p>
+      <p>📸 <strong>Suntik Sosmed</strong> — Followers, Likes, Views, dll. (via bot: /suntik)</p>
+      <p style="margin-top:12px">❓ Pilih menu di bawah untuk mulai, atau hubungi admin jika butuh bantuan.</p>
+      <p>🙏🏻 Terima kasih dan selamat menggunakan layanan kami!</p>
+    </div>
+    <div class="bot-grid">
+      <button class="bot-btn" onclick="openDesc('reguler')">
+        🗂️ Bot Fsub
+        <small>Force Subscribe · mulai Rp 30.000/bulan</small>
+      </button>
+      <button class="bot-btn" onclick="openDesc('vip')">
+        👀 Bot AutoOrder VIP
+        <small>Jual akses channel VIP · Rp 50.000/bulan</small>
+      </button>
+      <button class="bot-btn" onclick="openDesc('tagall')">
+        📢 Bot TagAll
+        <small>Partner auto tagall · Rp 50.000/bulan</small>
+      </button>
+    </div>
+  </div>
 
-    <div style="margin-top:12px">
+  <!-- DESKRIPSI -->
+  <div id="stepDesc" class="hidden">
+    <div class="card">
+      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button></div>
+      <div id="descTitle" style="font-size:18px;font-weight:700;margin-bottom:8px"></div>
+      <div id="descBody" class="desc-box"></div>
+      <div style="margin-top:12px">
+        <span class="chip" id="descPriceChip"></span>
+      </div>
+      <button class="btn btn-primary" onclick="goRent()">Lanjut sewa →</button>
+    </div>
+  </div>
+
+  <!-- SEWA -->
+  <div id="stepSelect" class="hidden">
+    <div class="card">
+      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="openDesc(selectedTipe)">← Kembali</button></div>
+      <div style="font-weight:700;margin-bottom:4px" id="rentTitle">Sewa Bot</div>
+      <input type="hidden" id="tipe_bot" value="reguler" />
+
       <label>🗓️ Durasi (bulan)</label>
       <input type="number" id="bulan" value="1" min="1" max="12" onchange="calc()" onkeyup="calc()" />
-    </div>
 
-    <div id="extra_fsub" style="margin-top:12px">
-      <label>🔘 Ekstra Button (base 3)</label>
-      <input type="number" id="btn" value="3" min="3" max="50" onchange="calc()" onkeyup="calc()" />
-      <p class="hint">+ Rp 5.000 / button</p>
-      <label>🖼️ Ekstra Konten (base 1)</label>
-      <input type="number" id="kntn" value="1" min="1" max="50" onchange="calc()" onkeyup="calc()" />
-      <p class="hint">+ Rp 5.000 / konten</p>
-    </div>
+      <div id="extra_fsub">
+        <label>🔘 Ekstra Button (base 3)</label>
+        <input type="number" id="btn" value="3" min="3" max="50" onchange="calc()" onkeyup="calc()" />
+        <p class="hint">+ Rp 5.000 per button</p>
+        <label>🖼️ Ekstra Konten (base 1)</label>
+        <input type="number" id="kntn" value="1" min="1" max="50" onchange="calc()" onkeyup="calc()" />
+        <p class="hint">+ Rp 5.000 per konten</p>
+      </div>
 
-    <div class="price" id="display_price">Rp 30.000</div>
-    <div id="desc" class="hint" style="margin-bottom:8px"></div>
-    <button class="btn btn-primary" onclick="startPay()">BAYAR SEKARANG</button>
+      <div class="price" id="display_price">Rp 30.000</div>
+      <button class="btn btn-primary" onclick="startPay()">BAYAR SEKARANG</button>
+    </div>
   </div>
 
-  <!-- STEP 2: QRIS -->
-  <div id="stepQr" class="card hidden">
-    <div id="qrBox">
-      <p>Scan QRIS untuk membayar</p>
-      <img id="qrImg" alt="QRIS" />
-      <p class="price" id="qrAmount">-</p>
-      <p class="hint" id="qrMeta">ID: -</p>
-      <p class="hint" id="qrStatus">Menunggu pembayaran...</p>
+  <!-- QRIS -->
+  <div id="stepQr" class="hidden">
+    <div class="card">
+      <div id="qrBox">
+        <p style="margin-top:0">Scan QRIS untuk membayar</p>
+        <img id="qrImg" alt="QRIS" />
+        <div class="price" id="qrAmount">-</div>
+        <p class="hint" id="qrMeta">ID: -</p>
+        <p class="hint" id="qrStatus">Menunggu pembayaran...</p>
+      </div>
+      <button class="btn btn-danger" onclick="cancelPay()">Batalkan</button>
     </div>
-    <button class="btn btn-danger" onclick="cancelPay()">Batalkan</button>
   </div>
 
-  <!-- STEP 3: Sukses -->
-  <div id="stepOk" class="card success hidden">
-    <div style="font-size:48px">✅</div>
-    <h3>Pembayaran Berhasil!</h3>
-    <p id="okDetail"></p>
-    <p class="hint">Silakan deploy bot Anda dari menu bot.</p>
-    <button class="btn btn-primary" onclick="tg.close()">Tutup</button>
+  <!-- SUKSES -->
+  <div id="stepOk" class="hidden">
+    <div class="card success">
+      <div style="font-size:48px">✅</div>
+      <h3 style="margin:8px 0">Pembayaran Berhasil!</h3>
+      <p id="okDetail"></p>
+      <p class="hint">Silakan deploy bot Anda dari menu bot.</p>
+      <button class="btn btn-primary" onclick="tg.close()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- PROFILE PANELS -->
+  <div id="stepProfile" class="hidden">
+    <div class="card">
+      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button></div>
+      <div style="font-weight:700;margin-bottom:10px" id="profilePanelTitle">Profil</div>
+      <div id="profilePanelBody" class="empty"></div>
+    </div>
   </div>
 </div>
 
@@ -119,46 +243,147 @@
   const tg = window.Telegram.WebApp;
   tg.expand();
   tg.ready();
+  try {
+    tg.setHeaderColor("#0b0614");
+    tg.setBackgroundColor("#0b0614");
+  } catch (e) {}
 
-  // ====== CONFIG — GANTI SESUAI AKUNMU ======
+  // ====== CONFIG ======
   const MAELYN_KEY = "sk_ms_9a8fdaf50236925a4ce8e0d97325cae8f00cf70ee6c1d3f9";
   const SAWERIA_USER_ID = "317e3ff8-6dba-421f-85bc-34bc6cab7ab5";
   const SAWERIA_EMAIL = "annacantik461@gmail.com";
-  // ==========================================
+  const BOT_MASTER_NAME = "Modular Bot";
+  // ====================
 
   let totalAmount = 0;
   let pollTimer = null;
   let currentPaymentId = null;
+  let selectedTipe = "reguler";
 
   const user = tg.initDataUnsafe?.user || {};
+  const displayName = user.username
+    ? "@" + user.username
+    : (user.first_name || "User");
+
   document.getElementById("profileBtn").textContent =
     (user.first_name || "U").charAt(0).toUpperCase();
-  document.getElementById("pName").textContent =
-    (user.username ? "@" + user.username : user.first_name) || "User";
+  document.getElementById("pName").textContent = displayName;
   document.getElementById("pId").textContent = "ID: " + (user.id || "-");
+  document.getElementById("helloText").innerHTML =
+    `👋🏻 Halo, <span style="color:#e9d5ff">\( {escapeHtml(displayName)}</span>! Selamat datang di <span style="color:#c4b5fd"> \){BOT_MASTER_NAME}</span>!`;
 
-  document.getElementById("profileBtn").onclick = () => {
+  document.getElementById("profileBtn").onclick = (e) => {
+    e.stopPropagation();
     document.getElementById("profileMenu").classList.toggle("hidden");
   };
+  document.body.addEventListener("click", () => {
+    document.getElementById("profileMenu").classList.add("hidden");
+  });
 
-  const DESK = {
-    reguler: "Force Subscribe + auto post konten. Cocok naikkan member channel.",
-    vip: "Auto order VIP channel dengan QRIS unik per user.",
-    tagall: "Partner bisa tagall otomatis tanpa jadi admin."
+  const BOT_INFO = {
+    reguler: {
+      title: "🗂️ Fitur Fsub (Force Subscribe)",
+      price: "Rp 30.000 / bulan",
+      html: `
+        <p><strong>💡 Deskripsi:</strong></p>
+        <p>🔹 Memaksa pengguna bergabung ke channel/grup sebelum akses media/file dari bot.</p>
+        <p>🔹 Berguna menaikkan anggota channel secara organik.</p>
+        <p>🔹 User yang belum join otomatis diminta bergabung dulu.</p>
+        <p>🔹 Cocok banget buat nambah member channel!</p>
+        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
+        <p>💰 <strong>Harga dasar:</strong> Rp 30.000</p>`
+    },
+    vip: {
+      title: "👀 Fitur Auto Order VIP",
+      price: "Rp 50.000 / bulan",
+      html: `
+        <p><strong>💡 Deskripsi:</strong></p>
+        <p>🔹 Jual akses Channel VIP dengan auto payment Saweria.</p>
+        <p>🔹 Setiap transaksi menghasilkan link unik (1 user).</p>
+        <p>🔹 Monetisasi konten otomatis tanpa ribet.</p>
+        <p>🔹 Tidak ada batasan jumlah channel VIP.</p>
+        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
+        <p>💰 <strong>Harga:</strong> Rp 50.000</p>`
+    },
+    tagall: {
+      title: "📢 Fitur Partner Auto Tagall",
+      price: "Rp 50.000 / bulan",
+      html: `
+        <p><strong>💡 Deskripsi:</strong></p>
+        <p>🔹 Partner bisa tag all di grup tanpa jadi admin.</p>
+        <p>🔹 Efisien untuk promosi & kolaborasi.</p>
+        <p>🔹 Cukup kirim pesan ke bot, auto tagall \~5 menit.</p>
+        <p>🔹 Tidak ada batasan jumlah partner.</p>
+        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
+        <p>💰 <strong>Harga:</strong> Rp 50.000</p>`
+    }
   };
 
-  function onTipeChange() {
-    const t = document.getElementById("tipe_bot").value;
-    document.getElementById("extra_fsub").style.display = t === "reguler" ? "block" : "none";
-    document.getElementById("desc").textContent = DESK[t] || "";
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function showOnly(id) {
+    ["stepHome","stepDesc","stepSelect","stepQr","stepOk","stepProfile"].forEach(s => {
+      document.getElementById(s).classList.add("hidden");
+    });
+    document.getElementById(id).classList.remove("hidden");
+    document.getElementById("profileMenu").classList.add("hidden");
+  }
+
+  function goHome() {
+    stopPoll();
+    showOnly("stepHome");
+  }
+
+  function openDesc(tipe) {
+    selectedTipe = tipe;
+    const info = BOT_INFO[tipe];
+    document.getElementById("descTitle").textContent = info.title;
+    document.getElementById("descBody").innerHTML = info.html;
+    document.getElementById("descPriceChip").textContent = info.price;
+    document.getElementById("tipe_bot").value = tipe;
+    showOnly("stepDesc");
+  }
+
+  function goRent() {
+    document.getElementById("rentTitle").textContent =
+      selectedTipe === "reguler" ? "Sewa Bot Fsub" :
+      selectedTipe === "vip" ? "Sewa Bot AutoOrder VIP" : "Sewa Bot TagAll";
+    document.getElementById("extra_fsub").style.display =
+      selectedTipe === "reguler" ? "block" : "none";
+    if (selectedTipe !== "reguler") {
+      document.getElementById("btn").value = 3;
+      document.getElementById("kntn").value = 1;
+    }
     calc();
+    showOnly("stepSelect");
+  }
+
+  function openProfilePanel(kind) {
+    document.getElementById("profileMenu").classList.add("hidden");
+    const titles = {
+      history: "📋 Riwayat Order",
+      status: "⏳ Status Order",
+      bots: "🤖 Bot Saya"
+    };
+    const messages = {
+      history: "Anda belum melakukan order / sewa bot.",
+      status: "Tidak ada order aktif saat ini.",
+      bots: "Bot anda belum aktif atau Anda belum melakukan deploy."
+    };
+    document.getElementById("profilePanelTitle").textContent = titles[kind] || "Profil";
+    document.getElementById("profilePanelBody").textContent = messages[kind] || "-";
+    showOnly("stepProfile");
   }
 
   function calc() {
     const tipe = document.getElementById("tipe_bot").value;
     const bulan = parseInt(document.getElementById("bulan").value) || 1;
-    let btn = parseInt(document.getElementById("btn").value) || 3;
-    let kntn = parseInt(document.getElementById("kntn").value) || 1;
+    const btn = parseInt(document.getElementById("btn").value) || 3;
+    const kntn = parseInt(document.getElementById("kntn").value) || 1;
     const dasar = tipe === "reguler" ? 30000 : 50000;
 
     if (tipe === "reguler") {
@@ -168,13 +393,6 @@
     }
     document.getElementById("display_price").textContent =
       "Rp " + totalAmount.toLocaleString("id-ID");
-  }
-
-  function show(id) {
-    ["stepSelect", "stepQr", "stepOk"].forEach(s =>
-      document.getElementById(s).classList.add("hidden")
-    );
-    document.getElementById(id).classList.remove("hidden");
   }
 
   async function startPay() {
@@ -187,7 +405,7 @@
     const kntn = parseInt(document.getElementById("kntn").value) || 1;
     const name = user.first_name || "User";
 
-    tg.MainButton.showProgress();
+    try { tg.MainButton.showProgress(); } catch (e) {}
     try {
       const res = await fetch("https://api.maelyn.eu/api/payment/saweria/create/transaction", {
         method: "POST",
@@ -211,29 +429,30 @@
       currentPaymentId = data.id || pay.id;
       const qr = data.qr_image || data.qr || "";
       const expired = data.expired_at || "-";
-
       if (!currentPaymentId) throw new Error("payment_id kosong");
 
-      // simpan meta untuk sendData nanti
-      window._orderMeta = { amount: totalAmount, month, tipe_bot: tipe, btn, kntn, payment_id: currentPaymentId };
+      window._orderMeta = {
+        amount: totalAmount, month, tipe_bot: tipe, btn, kntn, payment_id: currentPaymentId
+      };
 
       if (qr) {
-        const src = qr.startsWith("data:") ? qr : ("data:image/png;base64," + qr.replace(/^data:image\/\w+;base64,/, ""));
+        const src = qr.startsWith("data:")
+          ? qr
+          : ("data:image/png;base64," + qr.replace(/^data:image\/\w+;base64,/, ""));
         document.getElementById("qrImg").src = src;
-      } else if (data.url || pay.payment_url) {
-        // fallback: tampilkan link jika QR tidak ada
-        document.getElementById("qrBox").innerHTML =
-          `<p>Buka link pembayaran:</p><a href="${data.url || pay.payment_url}" target="_blank">Bayar di sini</a>`;
       }
 
-      document.getElementById("qrAmount").textContent = "Rp " + totalAmount.toLocaleString("id-ID");
-      document.getElementById("qrMeta").textContent = `ID: ${currentPaymentId} · Exp: ${expired}`;
-      show("stepQr");
+      document.getElementById("qrAmount").textContent =
+        "Rp " + totalAmount.toLocaleString("id-ID");
+      document.getElementById("qrMeta").textContent =
+        `ID: ${currentPaymentId} · Exp: ${expired}`;
+      document.getElementById("qrStatus").textContent = "Menunggu pembayaran...";
+      showOnly("stepQr");
       startPoll();
     } catch (e) {
       tg.showAlert("Error: " + (e.message || e));
     } finally {
-      tg.MainButton.hideProgress();
+      try { tg.MainButton.hideProgress(); } catch (e) {}
     }
   }
 
@@ -250,14 +469,15 @@
   async function checkStatus() {
     if (!currentPaymentId) return;
     try {
-      const url = `https://api.maelyn.eu/api/payment/saweria/check/transaction?user_id=\( {encodeURIComponent(SAWERIA_USER_ID)}&payment_id= \){encodeURIComponent(currentPaymentId)}`;
-      const res = await fetch(url, {
-        headers: { "x-maelyn-auth": MAELYN_KEY }
-      });
+      const url =
+        "https://api.maelyn.eu/api/payment/saweria/check/transaction?user_id=" +
+        encodeURIComponent(SAWERIA_USER_ID) +
+        "&payment_id=" +
+        encodeURIComponent(currentPaymentId);
+      const res = await fetch(url, { headers: { "x-maelyn-auth": MAELYN_KEY } });
       const json = await res.json();
       const st = (json.payment && json.payment.status) || json.status || "";
       document.getElementById("qrStatus").textContent = "Status: " + (st || "...");
-
       if (String(st).toUpperCase() === "PAID") {
         stopPoll();
         onPaid();
@@ -271,9 +491,7 @@
     const m = window._orderMeta || {};
     document.getElementById("okDetail").textContent =
       `Paket ${String(m.tipe_bot || "").toUpperCase()} · ${m.month} bulan · Rp ${(m.amount || 0).toLocaleString("id-ID")}`;
-    show("stepOk");
-
-    // Kirim ke bot agar set AKSES_DEPLOY
+    showOnly("stepOk");
     try {
       tg.sendData(JSON.stringify({
         event: "paid",
@@ -290,10 +508,9 @@
   function cancelPay() {
     stopPoll();
     currentPaymentId = null;
-    show("stepSelect");
+    showOnly("stepSelect");
   }
 
-  onTipeChange();
   calc();
 </script>
 </body>
