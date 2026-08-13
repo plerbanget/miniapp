@@ -61,8 +61,8 @@
     }
     .hero {
       width: 100%; border-radius: 16px; display: block;
-      margin-bottom: 14px; object-fit: cover; max-height: 180px;
-      border: 1px solid var(--line);
+      margin-bottom: 14px; object-fit: cover; max-height: 200px;
+      border: 1px solid var(--line); background: #1a0b2e;
     }
     .welcome h1 {
       font-size: 18px; margin: 0 0 10px; line-height: 1.35;
@@ -78,7 +78,10 @@
       background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(30,10,50,.9));
       color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer;
     }
-    .bot-btn small { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; font-size: 12px; }
+    .bot-btn small {
+      display: block; font-weight: 400; color: var(--muted);
+      margin-top: 4px; font-size: 12px;
+    }
     .bot-btn:active { transform: scale(.98); }
 
     label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
@@ -105,6 +108,14 @@
       border: 1px solid var(--line);
     }
     .btn-danger { background: #7f1d1d; color: #fecaca; }
+    .btn-admin {
+      background: transparent;
+      color: #e9d5ff;
+      border: 1px dashed var(--line);
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 14px;
+    }
     #qrBox { text-align: center; }
     #qrBox img {
       max-width: 230px; width: 100%; border-radius: 12px;
@@ -145,12 +156,12 @@
         <strong>Platform terpadu</strong> untuk memudahkan kamu mendeploy bot:
       </p>
       <p>🗃️ <strong>Bot Fsub</strong> — Wajib Join & Auto Post Konten.</p>
-      <p>🔞 <strong>Bot VIP Auto Order</strong> — Auto order vip dengan pembayaran qris otomatis.</p>
+      <p>🔞 <strong>Bot VIP Auto Order</strong> — Auto order VIP dengan pembayaran QRIS otomatis.</p>
       <p>📢 <strong>Bot TagAll</strong> — Mention massal partner & non-partner.</p>
-
       <p style="margin-top:12px">Pilih menu di bawah untuk mulai, atau hubungi admin jika butuh bantuan.</p>
       <p>🙏🏻 Terima kasih dan selamat menggunakan layanan kami!</p>
     </div>
+
     <div class="bot-grid">
       <button class="bot-btn" onclick="openDesc('reguler')">
         🗂️ Bot Fsub
@@ -165,12 +176,16 @@
         <small>Partner auto tagall · Rp 50.000/bulan</small>
       </button>
     </div>
+
+    <button class="btn btn-admin" onclick="contactAdmin()">💬 Hubungi Admin</button>
   </div>
 
   <!-- DESKRIPSI -->
   <div id="stepDesc" class="hidden">
     <div class="card">
-      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button></div>
+      <div class="back-row">
+        <button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button>
+      </div>
       <div id="descTitle" style="font-size:18px;font-weight:700;margin-bottom:8px"></div>
       <div id="descBody" class="desc-box"></div>
       <div style="margin-top:12px">
@@ -183,7 +198,9 @@
   <!-- SEWA -->
   <div id="stepSelect" class="hidden">
     <div class="card">
-      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="openDesc(selectedTipe)">← Kembali</button></div>
+      <div class="back-row">
+        <button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="openDesc(selectedTipe)">← Kembali</button>
+      </div>
       <div style="font-weight:700;margin-bottom:4px" id="rentTitle">Sewa Bot</div>
       <input type="hidden" id="tipe_bot" value="reguler" />
 
@@ -229,10 +246,12 @@
     </div>
   </div>
 
-  <!-- PROFILE PANELS -->
+  <!-- PROFILE -->
   <div id="stepProfile" class="hidden">
     <div class="card">
-      <div class="back-row"><button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button></div>
+      <div class="back-row">
+        <button class="btn btn-ghost" style="width:auto;padding:8px 14px" onclick="goHome()">← Kembali</button>
+      </div>
       <div style="font-weight:700;margin-bottom:10px" id="profilePanelTitle">Profil</div>
       <div id="profilePanelBody" class="empty"></div>
     </div>
@@ -240,7 +259,7 @@
 </div>
 
 <script>
-  const tg = window.Telegram.WebApp;
+  var tg = window.Telegram.WebApp;
   tg.expand();
   tg.ready();
   try {
@@ -249,84 +268,94 @@
   } catch (e) {}
 
   // ====== CONFIG ======
-  const MAELYN_KEY = "sk_ms_9a8fdaf50236925a4ce8e0d97325cae8f00cf70ee6c1d3f9";
-  const SAWERIA_USER_ID = "317e3ff8-6dba-421f-85bc-34bc6cab7ab5";
-  const SAWERIA_EMAIL = "annacantik461@gmail.com";
-  const BOT_MASTER_NAME = "Modular Bot";
+  var MAELYN_KEY = "sk_ms_9a8fdaf50236925a4ce8e0d97325cae8f00cf70ee6c1d3f9";
+  var SAWERIA_USER_ID = "317e3ff8-6dba-421f-85bc-34bc6cab7ab5";
+  var SAWERIA_EMAIL = "annacantik461@gmail.com";
+  var BOT_MASTER_NAME = "Modular Bot";
+  var ADMIN_USERNAME = "skyzixxxx";
   // ====================
 
-  let totalAmount = 0;
-  let pollTimer = null;
-  let currentPaymentId = null;
-  let selectedTipe = "reguler";
+  var totalAmount = 0;
+  var pollTimer = null;
+  var currentPaymentId = null;
+  var selectedTipe = "reguler";
 
-  const user = tg.initDataUnsafe?.user || {};
-  const displayName = user.username
-    ? "@" + user.username
+  var user = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : {};
+  var displayName = user.username
+    ? ("@" + user.username)
     : (user.first_name || "User");
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[c];
+    });
+  }
 
   document.getElementById("profileBtn").textContent =
     (user.first_name || "U").charAt(0).toUpperCase();
   document.getElementById("pName").textContent = displayName;
   document.getElementById("pId").textContent = "ID: " + (user.id || "-");
-  document.getElementById("helloText").innerHTML =
-    `👋🏻 Halo, <span style="color:#e9d5ff">\( {escapeHtml(displayName)}</span>! Selamat datang di <span style="color:#c4b5fd"> \){BOT_MASTER_NAME}</span>!`;
 
-  document.getElementById("profileBtn").onclick = (e) => {
+  document.getElementById("helloText").innerHTML =
+    "👋🏻 Halo, <span style=\"color:#e9d5ff\">" + escapeHtml(displayName) +
+    "</span>! Selamat datang di <span style=\"color:#c4b5fd\">" +
+    escapeHtml(BOT_MASTER_NAME) + "</span>!";
+
+  document.getElementById("profileBtn").onclick = function (e) {
     e.stopPropagation();
     document.getElementById("profileMenu").classList.toggle("hidden");
   };
-  document.body.addEventListener("click", () => {
+  document.body.addEventListener("click", function () {
     document.getElementById("profileMenu").classList.add("hidden");
   });
 
-  const BOT_INFO = {
+  var BOT_INFO = {
     reguler: {
       title: "🗂️ Fitur Fsub (Force Subscribe)",
       price: "Rp 30.000 / bulan",
-      html: `
-        <p><strong>💡 Deskripsi:</strong></p>
-        <p>🔹 Memaksa pengguna bergabung ke channel/grup sebelum akses media/file dari bot.</p>
-        <p>🔹 Berguna menaikkan anggota channel secara organik.</p>
-        <p>🔹 User yang belum join otomatis diminta bergabung dulu.</p>
-        <p>🔹 Cocok banget buat nambah member channel!</p>
-        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
-        <p>💰 <strong>Harga dasar:</strong> Rp 30.000</p>`
+      html:
+        "<p><strong>💡 Deskripsi:</strong></p>" +
+        "<p>🔹 Memaksa pengguna bergabung ke channel/grup sebelum akses media/file dari bot.</p>" +
+        "<p>🔹 Berguna menaikkan anggota channel secara organik.</p>" +
+        "<p>🔹 User yang belum join otomatis diminta bergabung dulu.</p>" +
+        "<p>🔹 Cocok banget buat nambah member channel!</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>💰 <strong>Harga dasar:</strong> Rp 30.000</p>"
     },
     vip: {
       title: "👀 Fitur Auto Order VIP",
       price: "Rp 50.000 / bulan",
-      html: `
-        <p><strong>💡 Deskripsi:</strong></p>
-        <p>🔹 Jual akses Channel VIP dengan auto payment Saweria.</p>
-        <p>🔹 Setiap transaksi menghasilkan link unik (1 user).</p>
-        <p>🔹 Monetisasi konten otomatis tanpa ribet.</p>
-        <p>🔹 Tidak ada batasan jumlah channel VIP.</p>
-        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
-        <p>💰 <strong>Harga:</strong> Rp 50.000</p>`
+      html:
+        "<p><strong>💡 Deskripsi:</strong></p>" +
+        "<p>🔹 Jual akses Channel VIP dengan auto payment Saweria.</p>" +
+        "<p>🔹 Setiap transaksi menghasilkan link unik (1 user).</p>" +
+        "<p>🔹 Monetisasi konten otomatis tanpa ribet.</p>" +
+        "<p>🔹 Tidak ada batasan jumlah channel VIP.</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>💰 <strong>Harga:</strong> Rp 50.000</p>"
     },
     tagall: {
       title: "📢 Fitur Partner Auto Tagall",
       price: "Rp 50.000 / bulan",
-      html: `
-        <p><strong>💡 Deskripsi:</strong></p>
-        <p>🔹 Partner bisa tag all di grup tanpa jadi admin.</p>
-        <p>🔹 Efisien untuk promosi & kolaborasi.</p>
-        <p>🔹 Cukup kirim pesan ke bot, auto tagall \~5 menit.</p>
-        <p>🔹 Tidak ada batasan jumlah partner.</p>
-        <p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>
-        <p>💰 <strong>Harga:</strong> Rp 50.000</p>`
+      html:
+        "<p><strong>💡 Deskripsi:</strong></p>" +
+        "<p>🔹 Partner bisa tag all di grup tanpa jadi admin.</p>" +
+        "<p>🔹 Efisien untuk promosi &amp; kolaborasi.</p>" +
+        "<p>🔹 Cukup kirim pesan ke bot, auto tagall \~5 menit.</p>" +
+        "<p>🔹 Tidak ada batasan jumlah partner.</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>💰 <strong>Harga:</strong> Rp 50.000</p>"
     }
   };
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-    }[c]));
-  }
-
   function showOnly(id) {
-    ["stepHome","stepDesc","stepSelect","stepQr","stepOk","stepProfile"].forEach(s => {
+    ["stepHome", "stepDesc", "stepSelect", "stepQr", "stepOk", "stepProfile"].forEach(function (s) {
       document.getElementById(s).classList.add("hidden");
     });
     document.getElementById(id).classList.remove("hidden");
@@ -340,7 +369,7 @@
 
   function openDesc(tipe) {
     selectedTipe = tipe;
-    const info = BOT_INFO[tipe];
+    var info = BOT_INFO[tipe];
     document.getElementById("descTitle").textContent = info.title;
     document.getElementById("descBody").innerHTML = info.html;
     document.getElementById("descPriceChip").textContent = info.price;
@@ -364,12 +393,12 @@
 
   function openProfilePanel(kind) {
     document.getElementById("profileMenu").classList.add("hidden");
-    const titles = {
+    var titles = {
       history: "📋 Riwayat Order",
       status: "⏳ Status Order",
       bots: "🤖 Bot Saya"
     };
-    const messages = {
+    var messages = {
       history: "Anda belum melakukan order / sewa bot.",
       status: "Tidak ada order aktif saat ini.",
       bots: "Bot anda belum aktif atau Anda belum melakukan deploy."
@@ -379,12 +408,20 @@
     showOnly("stepProfile");
   }
 
+  function contactAdmin() {
+    try {
+      tg.openTelegramLink("https://t.me/" + ADMIN_USERNAME);
+    } catch (e) {
+      window.open("https://t.me/" + ADMIN_USERNAME, "_blank");
+    }
+  }
+
   function calc() {
-    const tipe = document.getElementById("tipe_bot").value;
-    const bulan = parseInt(document.getElementById("bulan").value) || 1;
-    const btn = parseInt(document.getElementById("btn").value) || 3;
-    const kntn = parseInt(document.getElementById("kntn").value) || 1;
-    const dasar = tipe === "reguler" ? 30000 : 50000;
+    var tipe = document.getElementById("tipe_bot").value;
+    var bulan = parseInt(document.getElementById("bulan").value, 10) || 1;
+    var btn = parseInt(document.getElementById("btn").value, 10) || 3;
+    var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
+    var dasar = tipe === "reguler" ? 30000 : 50000;
 
     if (tipe === "reguler") {
       totalAmount = dasar * bulan + Math.max(0, btn - 3) * 5000 + Math.max(0, kntn - 1) * 5000;
@@ -399,15 +436,15 @@
     calc();
     if (totalAmount <= 0) return tg.showAlert("Harga tidak valid");
 
-    const tipe = document.getElementById("tipe_bot").value;
-    const month = parseInt(document.getElementById("bulan").value) || 1;
-    const btn = parseInt(document.getElementById("btn").value) || 3;
-    const kntn = parseInt(document.getElementById("kntn").value) || 1;
-    const name = user.first_name || "User";
+    var tipe = document.getElementById("tipe_bot").value;
+    var month = parseInt(document.getElementById("bulan").value, 10) || 1;
+    var btn = parseInt(document.getElementById("btn").value, 10) || 3;
+    var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
+    var name = user.first_name || "User";
 
     try { tg.MainButton.showProgress(); } catch (e) {}
     try {
-      const res = await fetch("https://api.maelyn.eu/api/payment/saweria/create/transaction", {
+      var res = await fetch("https://api.maelyn.eu/api/payment/saweria/create/transaction", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -418,25 +455,30 @@
           amount: totalAmount,
           name: name,
           email: SAWERIA_EMAIL,
-          msg: `MiniApp ${tipe} \( {month}bln uid: \){user.id || 0}`
+          msg: "MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0)
         })
       });
-      const json = await res.json();
+      var json = await res.json();
       if (!json.success) throw new Error(json.message || "Gagal buat transaksi");
 
-      const pay = json.payment || {};
-      const data = pay.data || pay;
+      var pay = json.payment || {};
+      var data = pay.data || pay;
       currentPaymentId = data.id || pay.id;
-      const qr = data.qr_image || data.qr || "";
-      const expired = data.expired_at || "-";
+      var qr = data.qr_image || data.qr || "";
+      var expired = data.expired_at || "-";
       if (!currentPaymentId) throw new Error("payment_id kosong");
 
       window._orderMeta = {
-        amount: totalAmount, month, tipe_bot: tipe, btn, kntn, payment_id: currentPaymentId
+        amount: totalAmount,
+        month: month,
+        tipe_bot: tipe,
+        btn: btn,
+        kntn: kntn,
+        payment_id: currentPaymentId
       };
 
       if (qr) {
-        const src = qr.startsWith("data:")
+        var src = qr.indexOf("data:") === 0
           ? qr
           : ("data:image/png;base64," + qr.replace(/^data:image\/\w+;base64,/, ""));
         document.getElementById("qrImg").src = src;
@@ -445,7 +487,7 @@
       document.getElementById("qrAmount").textContent =
         "Rp " + totalAmount.toLocaleString("id-ID");
       document.getElementById("qrMeta").textContent =
-        `ID: ${currentPaymentId} · Exp: ${expired}`;
+        "ID: " + currentPaymentId + " · Exp: " + expired;
       document.getElementById("qrStatus").textContent = "Menunggu pembayaran...";
       showOnly("stepQr");
       startPoll();
@@ -461,6 +503,7 @@
     pollTimer = setInterval(checkStatus, 8000);
     checkStatus();
   }
+
   function stopPoll() {
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = null;
@@ -469,14 +512,14 @@
   async function checkStatus() {
     if (!currentPaymentId) return;
     try {
-      const url =
+      var url =
         "https://api.maelyn.eu/api/payment/saweria/check/transaction?user_id=" +
         encodeURIComponent(SAWERIA_USER_ID) +
         "&payment_id=" +
         encodeURIComponent(currentPaymentId);
-      const res = await fetch(url, { headers: { "x-maelyn-auth": MAELYN_KEY } });
-      const json = await res.json();
-      const st = (json.payment && json.payment.status) || json.status || "";
+      var res = await fetch(url, { headers: { "x-maelyn-auth": MAELYN_KEY } });
+      var json = await res.json();
+      var st = (json.payment && json.payment.status) || json.status || "";
       document.getElementById("qrStatus").textContent = "Status: " + (st || "...");
       if (String(st).toUpperCase() === "PAID") {
         stopPoll();
@@ -488,9 +531,11 @@
   }
 
   function onPaid() {
-    const m = window._orderMeta || {};
+    var m = window._orderMeta || {};
     document.getElementById("okDetail").textContent =
-      `Paket ${String(m.tipe_bot || "").toUpperCase()} · ${m.month} bulan · Rp ${(m.amount || 0).toLocaleString("id-ID")}`;
+      "Paket " + String(m.tipe_bot || "").toUpperCase() +
+      " · " + m.month + " bulan · Rp " +
+      (m.amount || 0).toLocaleString("id-ID");
     showOnly("stepOk");
     try {
       tg.sendData(JSON.stringify({
