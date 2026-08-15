@@ -139,6 +139,25 @@
       display: inline-block; padding: 4px 10px; border-radius: 999px;
       background: rgba(168,85,247,.2); color: #e9d5ff; font-size: 12px;
     }
+    .order-item {
+      text-align: left;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.2);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .order-item b { color: var(--text); }
+    .badge-ok {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 999px; background: rgba(34,197,94,.25); color: #86efac;
+    }
+    .badge-off {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 999px; background: rgba(239,68,68,.2); color: #fca5a5;
+    }
   </style>
 </head>
 <body>
@@ -303,6 +322,7 @@
   var currentPaymentId = null;
   var selectedTipe = "reguler";
   var user = {};
+  var STORAGE_KEY = "mb_orders_v1";
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -357,13 +377,74 @@
         photo.style.display = "none";
         initial.style.display = "flex";
       };
-      photo.src = u.photo_url;
+      photo.src = u.photo_url + (u.photo_url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
     } else {
       photo.style.display = "none";
       initial.style.display = "flex";
     }
 
     return u;
+  }
+
+  function csGet(key, cb) {
+    try {
+      if (tg.CloudStorage && tg.CloudStorage.getItem) {
+        tg.CloudStorage.getItem(key, function (err, val) {
+          cb(err ? null : val);
+        });
+        return;
+      }
+    } catch (e) {}
+    try { cb(localStorage.getItem(key)); } catch (e2) { cb(null); }
+  }
+
+  function csSet(key, val, cb) {
+    try {
+      if (tg.CloudStorage && tg.CloudStorage.setItem) {
+        tg.CloudStorage.setItem(key, val, function () {
+          if (cb) cb();
+        });
+        return;
+      }
+    } catch (e) {}
+    try { localStorage.setItem(key, val); } catch (e2) {}
+    if (cb) cb();
+  }
+
+  function getOrders(cb) {
+    csGet(STORAGE_KEY, function (raw) {
+      var list = [];
+      try { if (raw) list = JSON.parse(raw) || []; } catch (e) {}
+      if (!Array.isArray(list)) list = [];
+      cb(list);
+    });
+  }
+
+  function saveOrder(order, cb) {
+    getOrders(function (list) {
+      list.unshift(order);
+      if (list.length > 30) list = list.slice(0, 30);
+      csSet(STORAGE_KEY, JSON.stringify(list), cb);
+    });
+  }
+
+  function fmtDate(ts) {
+    try {
+      return new Date(ts).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+    } catch (e) {
+      return "-";
+    }
+  }
+
+  function isActive(order) {
+    var days = (parseInt(order.month, 10) || 1) * 30;
+    var end = (order.ts || 0) + days * 24 * 60 * 60 * 1000;
+    return Date.now() < end;
+  }
+
+  function expireAt(order) {
+    var days = (parseInt(order.month, 10) || 1) * 30;
+    return fmtDate((order.ts || 0) + days * 24 * 60 * 60 * 1000);
   }
 
   user = loadUser();
@@ -413,13 +494,14 @@
       price: "Rp 50.000 / bulan",
       html:
         "<p><strong>💡 Deskripsi:</strong></p>" +
-        "<p>🔹 Lindungi grup kamu dari spammer, link phising, dan kata kasar secara otomatis.</p>" +
+        "<p>🔹 Lindungi grup dari spammer, link phising, dan kata kasar secara otomatis.</p>" +
         "<p>🔹 Fitur auto kick/ban untuk pelanggar aturan.</p>" +
         "<p>🔹 Harga dasar sudah termasuk 1 lisensi grup aktif.</p>" +
         "<p>🕖 <strong>Masa aktif:</strong> 1 bulan</p>" +
         "<p>💰 <strong>Harga dasar:</strong> Rp 50.000</p>"
     }
   };
+
 
   function showOnly(id) {
     ["stepHome", "stepDesc", "stepSelect", "stepQr", "stepOk", "stepProfile"].forEach(function (s) {
@@ -472,14 +554,82 @@
       status: "⏳ Status Order",
       bots: "🤖 Bot Saya"
     };
-    var messages = {
-      history: "Anda belum melakukan order / sewa bot.",
-      status: "Tidak ada order aktif saat ini.",
-      bots: "Bot anda belum aktif atau Anda belum melakukan deploy."
-    };
     document.getElementById("profilePanelTitle").textContent = titles[kind] || "Profil";
-    document.getElementById("profilePanelBody").textContent = messages[kind] || "-";
+    document.getElementById("profilePanelBody").innerHTML =
+      "<p class=\"empty\">Memuat...</p>";
     showOnly("stepProfile");
+
+    getOrders(function (list) {
+      var body = document.getElementById("profilePanelBody");
+
+      if (!list.length) {
+        var emptyMsg = {
+          history: "Anda belum melakukan order / sewa bot lewat Mini App.",
+          status: "Tidak ada order aktif saat ini.",
+          bots: "Bot anda belum aktif atau Anda belum melakukan deploy / sewa lewat Mini App."
+        };
+        body.innerHTML = "<p class=\"empty\">" + (emptyMsg[kind] || "-") + "</p>";
+        return;
+      }
+
+      if (kind === "history") {
+        body.innerHTML = list.map(function (o) {
+          return (
+            "<div class=\"order-item\">" +
+            "<b>" + escapeHtml(String(o.tipe_bot || "-").toUpperCase()) + "</b> · " +
+            (o.month || 1) + " bln<br>" +
+            "Rp " + Number(o.amount || 0).toLocaleString("id-ID") + "<br>" +
+            "<span class=\"hint\">" + escapeHtml(fmtDate(o.ts)) +
+            " · ID " + escapeHtml(String(o.payment_id || "-")) + "</span>" +
+            "</div>"
+          );
+        }).join("");
+        return;
+      }
+
+      if (kind === "status") {
+        var aktif = list.filter(isActive);
+        if (!aktif.length) {
+          body.innerHTML = "<p class=\"empty\">Tidak ada order aktif saat ini.</p>";
+          return;
+        }
+        body.innerHTML = aktif.map(function (o) {
+          return (
+            "<div class=\"order-item\">" +
+            "<b>" + escapeHtml(String(o.tipe_bot || "-").toUpperCase()) + "</b> " +
+            "<span class=\"badge-ok\">AKTIF</span><br>" +
+            "Durasi: " + (o.month || 1) + " bulan<br>" +
+            "<span class=\"hint\">Perkiraan habis: " + escapeHtml(expireAt(o)) + "</span>" +
+            "</div>"
+          );
+        }).join("");
+        return;
+      }
+
+      var bots = list.filter(isActive);
+      if (!bots.length) {
+        body.innerHTML =
+          "<p class=\"empty\">Bot anda belum aktif atau masa sewa sudah habis. Silakan sewa / deploy ulang.</p>";
+        return;
+      }
+      body.innerHTML = bots.map(function (o) {
+        var extra = "";
+        if (o.tipe_bot === "reguler") {
+          extra = "Button: " + (o.btn || 3) + " · Konten: " + (o.kntn || 1);
+        } else if (o.tipe_bot === "antispam") {
+          extra = "Max grup: " + (o.btn || 1);
+        }
+        return (
+          "<div class=\"order-item\">" +
+          "<b>Paket " + escapeHtml(String(o.tipe_bot || "-").toUpperCase()) + "</b> " +
+          "<span class=\"badge-ok\">SEWA AKTIF</span><br>" +
+          (extra ? extra + "<br>" : "") +
+          "<span class=\"hint\">Habis \~ " + escapeHtml(expireAt(o)) + "</span><br>" +
+          "<span class=\"hint\">Deploy bot dari menu bot jika belum.</span>" +
+          "</div>"
+        );
+      }).join("");
+    });
   }
 
   function contactAdmin() {
@@ -496,7 +646,7 @@
     var btn = parseInt(document.getElementById("btn").value, 10) || 3;
     var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
     var grupAntispam = parseInt(document.getElementById("grup_antispam").value, 10) || 1;
-    
+
     var dasar = (tipe === "vip" || tipe === "tagall" || tipe === "antispam") ? 50000 : 30000;
 
     if (tipe === "reguler") {
@@ -516,7 +666,7 @@
 
     var tipe = document.getElementById("tipe_bot").value;
     var month = parseInt(document.getElementById("bulan").value, 10) || 1;
-    var btn = tipe === "antispam" 
+    var btn = tipe === "antispam"
       ? (parseInt(document.getElementById("grup_antispam").value, 10) || 1)
       : (parseInt(document.getElementById("btn").value, 10) || 3);
     var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
@@ -524,9 +674,7 @@
 
     try { tg.MainButton.showProgress(); } catch (e) {}
     try {
-      var msgText = tipe === "reguler" 
-        ? ("MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0))
-        : tipe === "antispam"
+      var msgText = tipe === "antispam"
         ? ("MiniApp antispam " + month + "bln grup:" + btn + " uid:" + (user.id || 0))
         : ("MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0));
 
@@ -584,6 +732,7 @@
     }
   }
 
+
   function startPoll() {
     stopPoll();
     pollTimer = setInterval(checkStatus, 8000);
@@ -623,6 +772,17 @@
       " · " + m.month + " bulan · Rp " +
       (m.amount || 0).toLocaleString("id-ID");
     showOnly("stepOk");
+
+    saveOrder({
+      tipe_bot: m.tipe_bot,
+      month: m.month,
+      amount: m.amount,
+      btn: m.btn,
+      kntn: m.kntn,
+      payment_id: m.payment_id,
+      ts: Date.now()
+    });
+
     try {
       tg.sendData(JSON.stringify({
         event: "paid",
