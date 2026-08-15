@@ -170,6 +170,7 @@
       <p>🗃️ <strong>Bot Fsub</strong> — Wajib Join & Auto Post Konten.</p>
       <p>🔞 <strong>Bot VIP Auto Order</strong> — Auto order VIP dengan pembayaran QRIS otomatis.</p>
       <p>📢 <strong>Bot TagAll</strong> — Mention massal partner & non-partner.</p>
+      <p>🛡️ <strong>Bot Anti Spam</strong> — Proteksi grup dari spammer dan link phising.</p>
       <p style="margin-top:12px">Pilih menu di bawah untuk mulai, atau hubungi admin jika butuh bantuan.</p>
       <p>🙏🏻 Terima kasih dan selamat menggunakan layanan kami!</p>
     </div>
@@ -186,6 +187,10 @@
       <button class="bot-btn" onclick="openDesc('tagall')">
         📢 Bot TagAll
         <small>Partner auto tagall · Rp 50.000/bulan</small>
+      </button>
+      <button class="bot-btn" onclick="openDesc('antispam')">
+        🛡️ Bot Anti Spam
+        <small>Proteksi grup otomatis · Rp 50.000/bulan</small>
       </button>
     </div>
 
@@ -219,13 +224,19 @@
       <label>🗓️ Durasi (bulan)</label>
       <input type="number" id="bulan" value="1" min="1" max="12" onchange="calc()" onkeyup="calc()" />
 
-      <div id="extra_fsub">
+      <div id="extra_fsub" style="display:none;">
         <label>🔘 Ekstra Button (base 3)</label>
         <input type="number" id="btn" value="3" min="3" max="50" onchange="calc()" onkeyup="calc()" />
         <p class="hint">+ Rp 5.000 per button</p>
         <label>🖼️ Ekstra Konten (base 1)</label>
         <input type="number" id="kntn" value="1" min="1" max="50" onchange="calc()" onkeyup="calc()" />
         <p class="hint">+ Rp 5.000 per konten</p>
+      </div>
+
+      <div id="extra_antispam" style="display:none;">
+        <label>🛡️ Ekstra Limit Grup (base 1)</label>
+        <input type="number" id="grup_antispam" value="1" min="1" max="50" onchange="calc()" onkeyup="calc()" />
+        <p class="hint">+ Rp 5.000 per ekstra slot grup</p>
       </div>
 
       <div class="price" id="display_price">Rp 30.000</div>
@@ -374,8 +385,7 @@
         "<p>🔹 Memaksa pengguna bergabung ke channel/grup sebelum akses media/file dari bot.</p>" +
         "<p>🔹 Berguna menaikkan anggota channel secara organik.</p>" +
         "<p>🔹 User yang belum join otomatis diminta bergabung dulu.</p>" +
-        "<p>🔹 Cocok banget buat nambah member channel!</p>" +
-        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan</p>" +
         "<p>💰 <strong>Harga dasar:</strong> Rp 30.000</p>"
     },
     vip: {
@@ -385,9 +395,7 @@
         "<p><strong>💡 Deskripsi:</strong></p>" +
         "<p>🔹 Jual akses Channel VIP dengan auto payment Saweria.</p>" +
         "<p>🔹 Setiap transaksi menghasilkan link unik (1 user).</p>" +
-        "<p>🔹 Monetisasi konten otomatis tanpa ribet.</p>" +
-        "<p>🔹 Tidak ada batasan jumlah channel VIP.</p>" +
-        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan</p>" +
         "<p>💰 <strong>Harga:</strong> Rp 50.000</p>"
     },
     tagall: {
@@ -397,20 +405,21 @@
         "<p><strong>💡 Deskripsi:</strong></p>" +
         "<p>🔹 Partner bisa tag all di grup tanpa jadi admin.</p>" +
         "<p>🔹 Efisien untuk promosi &amp; kolaborasi.</p>" +
-        "<p>🔹 Cukup kirim pesan ke bot, auto tagall \~5 menit.</p>" +
-        "<p>🔹 Tidak ada batasan jumlah partner.</p>" +
-        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan (bisa diperpanjang)</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan</p>" +
         "<p>💰 <strong>Harga:</strong> Rp 50.000</p>"
+    },
+    antispam: {
+      title: "🛡️ Fitur Bot Anti Spam",
+      price: "Rp 50.000 / bulan",
+      html:
+        "<p><strong>💡 Deskripsi:</strong></p>" +
+        "<p>🔹 Lindungi grup kamu dari spammer, link phising, dan kata kasar secara otomatis.</p>" +
+        "<p>🔹 Fitur auto kick/ban untuk pelanggar aturan.</p>" +
+        "<p>🔹 Harga dasar sudah termasuk 1 lisensi grup aktif.</p>" +
+        "<p>🕖 <strong>Masa aktif:</strong> 1 bulan</p>" +
+        "<p>💰 <strong>Harga dasar:</strong> Rp 50.000</p>"
     }
   };
-
-  function showOnly(id) {
-    ["stepHome", "stepDesc", "stepSelect", "stepQr", "stepOk", "stepProfile"].forEach(function (s) {
-      document.getElementById(s).classList.add("hidden");
-    });
-    document.getElementById(id).classList.remove("hidden");
-    document.getElementById("profileMenu").classList.add("hidden");
-  }
 
   function goHome() {
     stopPoll();
@@ -430,10 +439,17 @@
   function goRent() {
     document.getElementById("rentTitle").textContent =
       selectedTipe === "reguler" ? "Sewa Bot Fsub" :
-      selectedTipe === "vip" ? "Sewa Bot AutoOrder VIP" : "Sewa Bot TagAll";
+      selectedTipe === "vip" ? "Sewa Bot AutoOrder VIP" :
+      selectedTipe === "tagall" ? "Sewa Bot TagAll" : "Sewa Bot Anti Spam";
+
     document.getElementById("extra_fsub").style.display =
       selectedTipe === "reguler" ? "block" : "none";
-    if (selectedTipe !== "reguler") {
+    document.getElementById("extra_antispam").style.display =
+      selectedTipe === "antispam" ? "block" : "none";
+
+    if (selectedTipe === "antispam") {
+      document.getElementById("grup_antispam").value = 1;
+    } else if (selectedTipe === "reguler") {
       document.getElementById("btn").value = 3;
       document.getElementById("kntn").value = 1;
     }
@@ -471,10 +487,14 @@
     var bulan = parseInt(document.getElementById("bulan").value, 10) || 1;
     var btn = parseInt(document.getElementById("btn").value, 10) || 3;
     var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
-    var dasar = tipe === "reguler" ? 30000 : 50000;
+    var grupAntispam = parseInt(document.getElementById("grup_antispam").value, 10) || 1;
+    
+    var dasar = (tipe === "vip" || tipe === "tagall" || tipe === "antispam") ? 50000 : 30000;
 
     if (tipe === "reguler") {
       totalAmount = dasar * bulan + Math.max(0, btn - 3) * 5000 + Math.max(0, kntn - 1) * 5000;
+    } else if (tipe === "antispam") {
+      totalAmount = dasar * bulan + Math.max(0, grupAntispam - 1) * 5000;
     } else {
       totalAmount = dasar * bulan;
     }
@@ -488,12 +508,20 @@
 
     var tipe = document.getElementById("tipe_bot").value;
     var month = parseInt(document.getElementById("bulan").value, 10) || 1;
-    var btn = parseInt(document.getElementById("btn").value, 10) || 3;
+    var btn = tipe === "antispam" 
+      ? (parseInt(document.getElementById("grup_antispam").value, 10) || 1)
+      : (parseInt(document.getElementById("btn").value, 10) || 3);
     var kntn = parseInt(document.getElementById("kntn").value, 10) || 1;
     var name = user.first_name || "User";
 
     try { tg.MainButton.showProgress(); } catch (e) {}
     try {
+      var msgText = tipe === "reguler" 
+        ? ("MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0))
+        : tipe === "antispam"
+        ? ("MiniApp antispam " + month + "bln grup:" + btn + " uid:" + (user.id || 0))
+        : ("MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0));
+
       var res = await fetch("https://api.maelyn.eu/api/payment/saweria/create/transaction", {
         method: "POST",
         headers: {
@@ -505,7 +533,7 @@
           amount: totalAmount,
           name: name,
           email: SAWERIA_EMAIL,
-          msg: "MiniApp " + tipe + " " + month + "bln uid:" + (user.id || 0)
+          msg: msgText
         })
       });
       var json = await res.json();
